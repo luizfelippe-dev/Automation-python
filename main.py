@@ -10,7 +10,7 @@ LIST_FILE_EXCLUDE =  [".txt",".py",".fdb",".fbk"]
 
 #Função para Gravar Log
 def grava_log(type_log:str = "Execusao", dic_arquivo:dict = {}, value_exec:str = None):
-    string = f"Tipo do Log: {type_log}, informações do arquivo: {dic_arquivo}, execessão: {value_exec}, data: {datetime.now()}"
+    string = f"Tipo do Log: {type_log}, informacoes do arquivo: {dic_arquivo}, execessão: {value_exec}, data: {datetime.now()}"
     with open("gravalog.log",'a') as gravalog :
         gravalog.write(string + '\n')
 
@@ -34,7 +34,6 @@ def list_files(diretorio = None):
     return lista_files_diretorio
 
 # Extraindo as informações no arquivo
-import re
 
 def extrair_informacoes(nome_arquivo):
     # Verifica se nome_arquivo é uma string
@@ -102,13 +101,29 @@ def obter_informacoes_arquivo(caminho_arquivo):
     }
 
 
-if __name__=='__main__':
-    a  = list_files()
+def deletar_arquivo(arquivo, informacao_completas):
+    try:
+       os.remove(arquivo)
+       grava_log(type_log='Exclusao',dic_arquivo=informacao_completas)
+    except ValueError as e: 
+        grava_log(type_log='Exclusao',dic_arquivo=informacao_completas,value_exec=e)
+        pass
 
-    for i in a:
-        print(type(a))
-        print(type(i))
+def db_file():
+    lista_files = []
+    executa =  list_files()
+    for i in executa:
         f = obter_informacoes_arquivo(str(i))
-        print(f)
+        lista_files.append(f)
 
+    return lista_files
+
+def main():
+    db = db_file()
+    for i in db:
+        if i['tamanho_arquivo'] > 0:
+            deletar_arquivo(i['nome_arquivo'],i)
     pass
+
+if __name__=='__main__':
+   app = main()
