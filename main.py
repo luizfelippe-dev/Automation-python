@@ -109,31 +109,45 @@ def deletar_arquivo(arquivo, informacao_completas):
         grava_log(type_log='Exclusao',dic_arquivo=informacao_completas,value_exec=e)
         pass
 
-def db_file(local:str = None):
-    lista_files = []
-    if local != None:
-        executa =  list_files(local)
-    else:
-         executa =  list_files()
+# def db_file(local:str = None):
+#     lista_files = []
+#     if local != None:
+#         executa =  list_files(local)
+#     else:
+#          executa =  list_files()
     
-    for i in executa:
-        f = obter_informacoes_arquivo(str(i))
-        print(f)
-        lista_files.append(f)
+#     for i in executa:
+#         f = obter_informacoes_arquivo(str(i))
+#         print(f)
+#         lista_files.append(f)
 
-    return lista_files
+#     return lista_files
+
+# def main():
+#     ### Verificando diretorio 
+#     lista =  os.listdir()
+#     for i in lista:
+#         if os.path.isdir(i):
+#             print(f'--Verificando do diretorio {i}')
+#             db = db_file(i)
+    
+#     for i in db:
+#         if i['tamanho_arquivo'] > 0:
+#             deletar_arquivo(i['nome_arquivo'],i)
+#     pass
 
 def main():
-    ### Verificando diretorio 
-    lista =  os.listdir()
-    for i in lista:
-        if os.path.isdir(i):
-            print(f'--Verificando do diretorio {i}')
-            db = db_file(i)
+    name = name_path()
+    dire = [i for i in os.listdir() if os.path.isdir(i) ]
+    lista =[]
+    for i in dire:
+        a =   list_files(i)
+        lista.append(a)
     
-    for i in db:
-        if i['tamanho_arquivo'] > 0:
-            deletar_arquivo(i['nome_arquivo'],i)
+    print(lista)
+    
+    
+
     pass
 
 if __name__=='__main__':
