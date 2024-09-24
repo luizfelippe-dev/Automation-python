@@ -109,17 +109,28 @@ def deletar_arquivo(arquivo, informacao_completas):
         grava_log(type_log='Exclusao',dic_arquivo=informacao_completas,value_exec=e)
         pass
 
-def db_file():
+def db_file(local:str = None):
     lista_files = []
-    executa =  list_files()
+    if local != None:
+        executa =  list_files(local)
+    else:
+         executa =  list_files()
+    
     for i in executa:
         f = obter_informacoes_arquivo(str(i))
+        print(f)
         lista_files.append(f)
 
     return lista_files
 
 def main():
-    db = db_file()
+    ### Verificando diretorio 
+    lista =  os.listdir()
+    for i in lista:
+        if os.path.isdir(i):
+            print(f'--Verificando do diretorio {i}')
+            db = db_file(i)
+    
     for i in db:
         if i['tamanho_arquivo'] > 0:
             deletar_arquivo(i['nome_arquivo'],i)
