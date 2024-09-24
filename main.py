@@ -34,10 +34,16 @@ def list_files(diretorio = None):
     return lista_files_diretorio
 
 # Extraindo as informações no arquivo
-def extrair_informacoes(nome_arquivo:str):
+import re
+
+def extrair_informacoes(nome_arquivo):
+    # Verifica se nome_arquivo é uma string
+    if not isinstance(nome_arquivo, str):
+        raise ValueError("nome_arquivo deve ser uma string")
+
     # Define o padrão regex para os nomes de arquivos
     padrao = r"(FB[234])(_SW)?_(\w+)_([0-9]{1,2})_([0-9]{1,2})_([0-9]{4})__(\d{1,2})_(\d{1,2})_(\d{1,2})_FBK"
-    nome_arquivo = os.path.splitext(nome_arquivo)
+    
     # Faz a correspondência com o padrão
     correspondencia = re.match(padrao, nome_arquivo)
     
@@ -64,7 +70,9 @@ def extrair_informacoes(nome_arquivo:str):
             "segundo": segundo
         }
     else:
-        return None
+        raise ValueError("O nome do arquivo não corresponde ao padrão esperado")
+
+# Exemplo de uso
 
 # Criando dicionario com informações do arquivo
 def obter_informacoes_arquivo(caminho_arquivo):
@@ -83,7 +91,7 @@ def obter_informacoes_arquivo(caminho_arquivo):
     # Retorna as informações
     return {
         "nome_arquivo": caminho_arquivo,
-        "tipo":ext['sw'].replace('_','') , 
+        "tipo":ext['sw'] , 
         "caminho_completo": caminho_completo,
         "data_criacao": data_criacao,
         "data_modificacao": data_modificacao,
@@ -98,8 +106,8 @@ if __name__=='__main__':
     a  = list_files()
 
     for i in a:
-        # # print(a)
-        #  print(type(i))
+        print(type(a))
+        print(type(i))
         f = obter_informacoes_arquivo(str(i))
         print(f)
 
