@@ -38,7 +38,6 @@ class Arquivos(Base):
 class ArquivosExcluidos(Base):
    __tablename__='arquivos_excluidos'
    id = Column(Integer, primary_key=True, autoincrement=True)
-   old_id = Column(Integer)
    name_arquivo = Column(String)
    tipo = Column(String,default=None ,comment="Se ele for SW ou não")
    cidade = Column(String,comment='A cidade da pasta que esta sendo executado')
@@ -51,7 +50,6 @@ class ArquivosExcluidos(Base):
    data_arquivo = Column(DateTime,comment="Data e hora que está no nome do arquivo")
    firebird = Column(String)
    excluir = Column(String,comment="Caso for S, apagar se for N nao apagar")
-   log_inclusao = Column(DateTime)
    log_exclusao = Column(DateTime, default=datetime.now())
 
 if not os.path.exists(path_db):

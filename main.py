@@ -3,7 +3,9 @@ import customtkinter as ctk
 from tkinter import filedialog,DoubleVar,Variable
 from tkinter import ttk
 from execute import VerifyFile
+from func_delete import ProcessDelete,DeleteFile
 from time import sleep
+
 
 ctk.set_default_color_theme('blue')
 ctk.set_appearance_mode('dark')
@@ -48,9 +50,15 @@ class AppMain(ctk.CTk):
 
         self.label_progressbar = ctk.CTkLabel(self.frame_client,text="0", font=('Arial',15),text_color='orange')
         self.label_progressbar.pack(anchor='center',after=self.progressbar)
+        
+        self.frame_button = ctk.CTkFrame(self,height=28)
+        self.frame_button.pack( fill='x',side='bottom')
 
-        self.button_start = ctk.CTkButton(self.frame_client,text='Start Process', command=self._start_process)
-        self.button_start.pack()
+        self.button_start = ctk.CTkButton(self.frame_button,text='Start Process', command=self._start_process)
+        self.button_start.grid(column=0, row=0,padx=10,pady=10)
+        
+        self.button_delete = ctk.CTkButton(self.frame_button,text='Deletar Arquivos', command=self._callback)
+        self.button_delete.grid(column=1, row=0,padx=10)
 
     def _start_process(self):
         self.progressbar.start()
@@ -87,12 +95,98 @@ class AppMain(ctk.CTk):
 
         self.update()
         pass             
+    
+    def _callback(self):
+        appdelete = AppDelete(self)
+    
+class AppDelete(ctk.CTkToplevel):
+    def __init__(self, master=None,*args, fg_color: str | Tuple[str] | None = None, **kwargs):
+        super().__init__(*args, fg_color=fg_color, **kwargs) 
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        window_width = screen_width // 2
+        window_height = screen_height // 2
+        x = (screen_width - window_width) // 2
+        y = (screen_height - window_height) // 2
+        
+        
+        # Configurando a geometria da janela
+        self.geometry(f"{window_width}x{window_height+50}+{x}+{y}")
+        self.title('Automação de exclusão de Backup de arquivos')
+        self.tab_main = ctk.CTkTabview(self,anchor='nw')
+        self.tab_main.pack(expand=True, fill='both', anchor = 'center')  
+        self.tab_main.add('Init')
+        self.tab_main.add('Progress')
+        #self.tab_main.set('Progress')
+        
+        self.table = ttk.Treeview(self.tab_main.tab('Init'),columns=('id','excluir','nome','ano','caminho'),show='headings',selectmode='browse')
+        self.table.column('id',minwidth=10,width=50,anchor='n')
+        self.table.column('excluir',minwidth=10,width=10,anchor='n')
+        self.table.column('nome',minwidth=10,width=50)
+        self.table.column('ano',minwidth=10,width=50,anchor='n')
+        self.table.column('caminho',minwidth=10,width=100)
+        self.table.heading('id',text='ID')
+        self.table.heading('excluir',text='EXCLUIR')
+        self.table.heading('nome',text='NOME')
+        self.table.heading('ano',text='ANO')
+        self.table.heading('caminho',text='CAMINHO')
+        
+        self.table.pack(expand=True,fill='both',anchor='center')
+        
+        self.text_exec = ctk.CTkTextbox(self.tab_main.tab('Progress'),text_color="Orange",state='disable')
+        self.text_exec.pack(expand=True,fill='both')
+        
+        
+        self.frame_button = ctk.CTkFrame(self,height=28)
+        self.frame_button.pack( fill='x',side='bottom')
+
+        self.button_start = ctk.CTkButton(self.frame_button,text='Start Process', command=None)
+        self.button_start.grid(column=0, row=0,padx=10,pady=10)
+        
+        self.button_delete = ctk.CTkButton(self.frame_button,text='Deletar Arquivos', command=self._start_delete)
+        self.button_delete.grid(column=1, row=0,padx=10)
+        
+        def _populate_table():
+            
+            data = ProcessDelete.return_files(self)
+            for i in data:
+                for (id,ex,no,an,cam) in i: 
+                    self.table.insert("",'end',values=(id,ex,no,an,cam))
+                
+        _populate_table()
+        
+    def _insert_text(self, text:str = ''):
+        print(text)
+        
+        if text != '':
+            try:
+                # texto = f""Nome:{text['nome_arquivo']},caminhho:{text['caminho_completo']},Data no Arquivo: {text['data_arquivo']} {text['hora_arquivo']}""
+                self.text_exec.configure(state='normal')
+                self.text_exec.insert('end',text=f"{text}\n")
+                self.text_exec.configure(state='disable')
+                self.update()
+            except:
+                pass    
 
         
+        pass          
+        
+
+    
+    def _start_delete(self):
+        self.tab_main.set('Progress')
+        result = DeleteFile()._start_process_delete()
+        for i in result:
+            print(i)
+            self._insert_text(i)
+            
+                    
+         
         
 
         
 
 if __name__=='__main__':
-    app =AppMain()
+    # app =AppDelete()
+    app = AppMain()
     app.mainloop()

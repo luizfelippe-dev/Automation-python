@@ -148,9 +148,8 @@ class VerifyFile():
             nome_diretorio_city = os.path.basename(os.path.dirname(caminho))
             parent_city = Path(caminho)
             nome_diretorio_pathlib_city = parent_city.parent.name
-            mais1 = nome_diretorio_pathlib_city.parent.name
             #partes_city = str(partes_city)
-            print(mais1)
+
             
             # partes_city = caminho.split("/")
             # print(partes_city)
