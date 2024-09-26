@@ -1,3 +1,5 @@
 /venv
 *.zip
 *.log
+*pycache*
+2024/*

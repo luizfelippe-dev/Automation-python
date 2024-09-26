@@ -27,7 +27,7 @@ class FileManager:
                     for r in listar:
                         if Path(r).name.endswith('.zip'):
                             listar_files.append(r.resolve())
-            return listar_files
+            yield listar_files
 
 
 
@@ -36,10 +36,12 @@ class VerifyFile():
         self.diretorio = directorio
 
 
-    def _save_db_info(self,name,tipo,sistema:str=None,caminho:str=None,date_creat:str=None,date_modify=None,size_file:str=None, date_name_file:str=None, version_firebird:str=None,exclude = 'N'):
+    def _save_db_info(self,name,tipo,city,year,sistema:str=None,caminho:str=None,date_creat:str=None,date_modify=None,size_file:str=None, date_name_file:str=None, version_firebird:str=None,exclude = 'N'):
         self.new_info = Arquivos(
             name_arquivo = name,
             tipo = tipo,
+            cidade = city,
+            ano=year,
             sistema = sistema,
             caminho_completo = caminho,
             data_criacao = date_creat,
@@ -54,40 +56,43 @@ class VerifyFile():
         # print(date_modify)
     # Verifica a existencia de subdiretorios.
     def _extrair_informacoes(self,nome_arquivo):
-        # Verifica se nome_arquivo é uma string
-        
-        if not isinstance(nome_arquivo, str):
-            raise ValueError("nome_arquivo deve ser uma string")
-
-        # Define o padrão regex para os nomes de arquivos
-        padrao = r"(FB[234])(_SW)?_(\w+)_([0-9]{1,2})_([0-9]{1,2})_([0-9]{4})__(\d{1,2})_(\d{1,2})_(\d{1,2})_FBK"
-        
-        # Faz a correspondência com o padrão
-        correspondencia = re.match(padrao, nome_arquivo)
-        
-        if correspondencia:
-            tipo_firebird = correspondencia.group(1)
-            sw = correspondencia.group(2)
-            sistema = correspondencia.group(3)
-            dia = correspondencia.group(4)
-            mes = correspondencia.group(5)
-            ano = correspondencia.group(6)
-            hora = correspondencia.group(7)
-            minuto = correspondencia.group(8)
-            segundo = correspondencia.group(9)
+        try:
+            # Verifica se nome_arquivo é uma string
             
-            return {
-                "tipo_firebird": tipo_firebird,
-                "sw": sw,
-                "sistema": sistema,
-                "dia": dia,
-                "mes": mes,
-                "ano": ano,
-                "hora": hora,
-                "minuto": minuto,
-                "segundo": segundo
-            }
-        else:
+            if not isinstance(nome_arquivo, str):
+                raise ValueError("nome_arquivo deve ser uma string")
+
+            # Define o padrão regex para os nomes de arquivos
+            padrao = r"(FB[234])(_SW)?_(\w+)_([0-9]{1,2})_([0-9]{1,2})_([0-9]{4})__(\d{1,2})_(\d{1,2})_(\d{1,2})_FBK"
+            
+            # Faz a correspondência com o padrão
+            correspondencia = re.match(padrao, nome_arquivo)
+            
+            if correspondencia:
+                tipo_firebird = correspondencia.group(1)
+                sw = correspondencia.group(2)
+                sistema = correspondencia.group(3)
+                dia = correspondencia.group(4)
+                mes = correspondencia.group(5)
+                ano = correspondencia.group(6)
+                hora = correspondencia.group(7)
+                minuto = correspondencia.group(8)
+                segundo = correspondencia.group(9)
+                
+                return {
+                    "tipo_firebird": tipo_firebird,
+                    "sw": sw,
+                    "sistema": sistema,
+                    "dia": dia,
+                    "mes": mes,
+                    "ano": ano,
+                    "hora": hora,
+                    "minuto": minuto,
+                    "segundo": segundo
+                }
+            else:
+                pass
+        except:        
             raise ValueError("O nome do arquivo não corresponde ao padrão esperado")
 
     def _veriy_subdiretorio(self,diretorio:str = os.getcwd()):
@@ -124,47 +129,74 @@ class VerifyFile():
 
         return lista_files_diretorio
 
-    async def obter_informacoes_arquivo(self,name_arquivo,caminho):
-        ext = self._extrair_informacoes(str(name_arquivo))
-        # Obtém o caminho completo do arquivo
-        caminho_completo = Path(caminho).resolve()
-        # Obtém a data de criação (somente no Windows)
-        data_criacao = datetime.fromtimestamp(os.path.getctime(caminho))
+    def obter_informacoes_arquivo(self,name_arquivo,caminho):
+        try:
+            ext = self._extrair_informacoes(str(name_arquivo))
 
-        # Obtém a data de modificação
-        data_modificacao = datetime.fromtimestamp(os.path.getmtime(caminho))
-        # dt = data_modificacao.strftime("%Y-%m-%d %H:%M:%S")
+            # Obtém o caminho completo do arquivo
+            caminho_completo = Path(caminho).resolve()
+            # Obtém a data de criação (somente no Windows)
+            data_criacao = datetime.fromtimestamp(os.path.getctime(caminho))
 
-        # Obtém o tamanho do arquivo em bytes
-        tamanho_arquivo = os.path.getsize(caminho)
+            # Obtém a data de modificação
+            data_modificacao = datetime.fromtimestamp(os.path.getmtime(caminho))
+            # dt = data_modificacao.strftime("%Y-%m-%d %H:%M:%S")
 
-        # Retorna as informações
-        data_hora_str = f"{ext['ano']}-{ext['mes']}-{ext['dia']} {ext['hora']}:{ext['minuto']}:{ext['segundo']}"
-        data_hora_obj = datetime.strptime(data_hora_str, '%Y-%m-%d %H:%M:%S')
+            # Obtém o tamanho do arquivo em bytes
+            tamanho_arquivo = os.path.getsize(caminho)
+            
+            nome_diretorio_city = os.path.basename(os.path.dirname(caminho))
+            parent_city = Path(caminho)
+            nome_diretorio_pathlib_city = parent_city.parent.name
+            mais1 = nome_diretorio_pathlib_city.parent.name
+            #partes_city = str(partes_city)
+            print(mais1)
+            
+            # partes_city = caminho.split("/")
+            # print(partes_city)
+            # if len(partes_city) > 2:
+            #     city_city =  partes_city[-3]
 
-        info = self._save_db_info(
-            name=name_arquivo,
-            tipo=ext['sw'],
-            sistema=ext['sistema'],
-            caminho=caminho_completo.as_posix(),
-            date_creat=data_criacao,
-            date_modify=data_modificacao,
-            size_file=tamanho_arquivo,
-            date_name_file=data_hora_obj,
-            version_firebird=ext['tipo_firebird']
-        )
+            
 
-        return {
-            "nome_arquivo": name_arquivo,
-            "tipo":ext['sw'] , 
-            "caminho_completo": caminho_completo.as_posix(),
-            "data_criacao": data_criacao,
-            "data_modificacao": data_modificacao,
-            "tamanho_arquivo": tamanho_arquivo,
-            "data_arquivo": f"{ext['dia']}-{ext['mes']}-{ext['ano']}",
-            "hora_arquivo": f"{ext['hora']}:{ext['minuto']}:{ext["segundo"]}",
-            "Firebird": ext['tipo_firebird']
-        }
+            # Retorna as informações
+            try:
+                data_hora_str = f"{ext['ano']}-{ext['mes']}-{ext['dia']} {ext['hora']}:{ext['minuto']}:{ext['segundo']}"
+            except:
+                data_hora_str = datetime.now()    
+            
+            try:
+                data_hora_obj = datetime.strptime(data_hora_str, '%Y-%m-%d %H:%M:%S')
+            except:
+                data_hora_obj = datetime.now()
+                    
+            info = self._save_db_info(
+                name=name_arquivo,
+                tipo=ext['sw'],
+                city=f'',
+                year=ext['ano'],
+                sistema=ext['sistema'],
+                caminho=caminho_completo.as_posix(),
+                date_creat=data_criacao,
+                date_modify=data_modificacao,
+                size_file=tamanho_arquivo,
+                date_name_file=data_hora_obj,
+                version_firebird=ext['tipo_firebird']
+            )
+
+            return {
+                "nome_arquivo": name_arquivo,
+                "tipo":ext['sw'] , 
+                "caminho_completo": caminho_completo.as_posix(),
+                "data_criacao": data_criacao,
+                "data_modificacao": data_modificacao,
+                "tamanho_arquivo": tamanho_arquivo,
+                "data_arquivo": f"{ext['dia']}-{ext['mes']}-{ext['ano']}",
+                "hora_arquivo": f"{ext['hora']}:{ext['minuto']}:{ext["segundo"]}",
+                "Firebird": ext['tipo_firebird']
+            }
+        except:
+            pass    
 
     def _start_process(self):
         # lista_diretorio = self._veriy_subdiretorio(self.diretorio)
@@ -183,7 +215,9 @@ class VerifyFile():
         file_manager = FileManager(self.diretorio)
         todos_files = file_manager.listar_todos_os_arquivos()
         for i in todos_files:
-           asyncio.run(self.obter_informacoes_arquivo(Path(i).name,i))
+            for e in i :
+                a = self.obter_informacoes_arquivo(Path(e).name,e)
+                yield a 
         
             
             
@@ -193,4 +227,6 @@ class VerifyFile():
 
 if __name__=='__main__':
     a = VerifyFile(os.getcwd())._start_process()
-    print(a)
+    for i in a:
+        pass
+    
