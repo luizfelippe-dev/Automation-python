@@ -36,7 +36,7 @@ def processar_pastas_por_dia(base_dir):
                     if "SW" in file:
                         caminho_completo = os.path.join(root, file)
                         if os.path.exists(caminho_completo):
-                            novo_nome = f"Z_{file}"
+                            novo_nome = f"Z{file}"
                             os.rename(caminho_completo, os.path.join(root, novo_nome))
                             print(f"Arquivo renomeado (SW): {novo_nome}")
                         continue
@@ -65,7 +65,7 @@ def processar_pastas_por_dia(base_dir):
                     try:
                         caminho_completo = arquivo[2]
                         if os.path.exists(caminho_completo):
-                            novo_nome = f"Z_{arquivo[0]}"
+                            novo_nome = f"Z{arquivo[0]}"
                             os.rename(caminho_completo, os.path.join(root, novo_nome))
                             print(f"Arquivo renomeado: {novo_nome}")
                         else:
@@ -92,7 +92,7 @@ def processar_pastas_por_mes(base_dir):
                     if "SW" in file:
                         caminho_completo = os.path.join(root, file)
                         if os.path.exists(caminho_completo):
-                            novo_nome = f"Z_{file}"
+                            novo_nome = f"Z{file}"
                             os.rename(caminho_completo, os.path.join(root, novo_nome))
                             print(f"Arquivo renomeado (SW): {novo_nome}")
                         continue
@@ -130,7 +130,7 @@ def processar_pastas_por_mes(base_dir):
                         try:
                             caminho_completo = arquivo[3]
                             if os.path.exists(caminho_completo):
-                                novo_nome = f"Z_{arquivo[1]}"
+                                novo_nome = f"Z{arquivo[1]}"
                                 os.rename(caminho_completo, os.path.join(root, novo_nome))
                                 print(f"Arquivo renomeado: {novo_nome}")
                             else:
@@ -150,14 +150,37 @@ def remover_prefixo_z(base_dir):
     for root, dirs, files in os.walk(base_dir):
         for file in files:
             try:
-                if file.startswith("Z_"):
+                if file.startswith("Z"):
                     caminho_completo = os.path.join(root, file)
-                    novo_nome = file[2:]  # Remove "Z_" do início
+                    novo_nome = file[1:]  # Remove "Z" do início
                     os.rename(caminho_completo, os.path.join(root, novo_nome))
-                    print(f"Prefixo 'Z_' removido: {novo_nome}")
+                    print(f"Prefixo 'Z' removido: {novo_nome}")
             except Exception as e:
                 print(f"Erro ao remover o prefixo do arquivo {file}: {e}")
             
+            arquivos_processados += 1
+            progresso["value"] = arquivos_processados
+            app.update_idletasks()
+
+def excluir_arquivos_com_z(base_dir):
+    total_arquivos = 0
+    for root, dirs, files in os.walk(base_dir):
+        total_arquivos += len(files)
+
+    progresso["maximum"] = total_arquivos
+    progresso["value"] = 0
+    arquivos_processados = 0
+
+    for root, dirs, files in os.walk(base_dir):
+        for file in files:
+            try:
+                if file.startswith("Z"):
+                    caminho_completo = os.path.join(root, file)
+                    os.remove(caminho_completo)
+                    print(f"Arquivo excluído: {file}")
+            except Exception as e:
+                print(f"Erro ao excluir o arquivo {file}: {e}")
+
             arquivos_processados += 1
             progresso["value"] = arquivos_processados
             app.update_idletasks()
@@ -188,14 +211,22 @@ def remover_z_dos_arquivos():
     pasta = pasta_entry.get()
     if os.path.isdir(pasta):
         remover_prefixo_z(pasta)
-        messagebox.showinfo("Concluído", "Os arquivos foram renomeados para remover o prefixo 'Z_'!")
+        messagebox.showinfo("Concluído", "Os arquivos foram renomeados para remover o prefixo 'Z'!")
+    else:
+        messagebox.showerror("Erro", "Selecione uma pasta válida.")
+
+def excluir_arquivos_com_z_button():
+    pasta = pasta_entry.get()
+    if os.path.isdir(pasta):
+        excluir_arquivos_com_z(pasta)
+        messagebox.showinfo("Concluído", "Os arquivos com prefixo 'Z' foram excluídos!")
     else:
         messagebox.showerror("Erro", "Selecione uma pasta válida.")
 
 # Interface gráfica
 app = tk.Tk()
-app.title("CleanAutomate :D")
-app.geometry("400x400")
+app.title("Automação de Backup")
+app.geometry("400x500")
 
 # Label e Entry para a pasta
 label = tk.Label(app, text="Selecione a pasta:")
@@ -222,8 +253,11 @@ botao_iniciar_mes.pack(pady=5)
 
 # Botão para remover o prefixo "Z_"
 botao_remover_z = tk.Button(app, text="Remover Prefixo 'Z' dos Arquivos", command=remover_z_dos_arquivos)
-botao_remover_z.pack(pady=10)
+botao_remover_z.pack(pady=5)
+
+# Botão para excluir arquivos com "Z_"
+botao_excluir_z = tk.Button(app, text="Excluir Arquivos com 'Z'", command=excluir_arquivos_com_z_button)
+botao_excluir_z.pack(pady=5)
 
 # Executando a interface gráfica
 app.mainloop()
-
