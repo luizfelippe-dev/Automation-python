@@ -1,21 +1,41 @@
 import os
 import re
 from collections import defaultdict
+from datetime import datetime, timedelta
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from tkinter import ttk
+import customtkinter as ctk
 
 def extrair_data(nome_arquivo):
-    # Regex para capturar a data no formato d_m_aaaa ou dd_mm_aaaa dentro do nome do arquivo
-    match = re.search(r"(\d{1,2}_\d{1,2}_\d{4})", nome_arquivo)
+    # Regex para capturar várias formas de datas como dd_mm_aaaa, d_mm_aaaa, dd_mm_aa ou dd_mm_aaaa_hh_mm_ss
+    match = re.search(r"(\d{1,2}_\d{1,2}_\d{2,4})", nome_arquivo)
     if match:
         return match.group(1)  # Retorna a data como string
     return None
 
 def obter_mes_ano(data):
-    # Extrai o mês e o ano da data no formato dd_mm_aaaa
-    dia, mes, ano = data.split('_')
+    # Extrai o mês e o ano da data no formato dd_mm_aaaa ou dd_mm_aa
+    partes_data = data.split('_')
+    if len(partes_data[2]) == 2:  # Se o ano for de dois dígitos, adiciona '20' para completar o formato
+        ano = f"20{partes_data[2]}"
+    else:
+        ano = partes_data[2]
+    mes = partes_data[1]
     return f"{mes}_{ano}"
+
+def ajustar_data_se_necessario(data_arquivo, timestamp_modificacao):
+    """Se o arquivo foi modificado entre 23h e 4h, ajusta a data para o dia anterior."""
+    data_modificacao = datetime.fromtimestamp(timestamp_modificacao)
+    hora_modificacao = data_modificacao.hour
+    
+    # Se o horário de modificação for entre 23h e 4h, considera como do dia anterior
+    if 23 <= hora_modificacao or hora_modificacao < 5:
+        data_modificada = data_modificacao - timedelta(days=1)
+        nova_data = data_modificada.strftime("%d_%m_%Y")
+        print(f"Ajustando data de {data_arquivo} para {nova_data} devido ao horário {hora_modificacao}.")
+        return nova_data
+    return data_arquivo
 
 def processar_pastas_por_dia(base_dir):
     total_arquivos = 0
@@ -32,7 +52,7 @@ def processar_pastas_por_dia(base_dir):
         for file in files:
             try:
                 print(f"Processando: {file}")
-                if file.endswith(".zip"):
+                if file.endswith((".zip", ".rar")):  # Reconhece arquivos .zip e .rar
                     if "SW" in file:
                         caminho_completo = os.path.join(root, file)
                         if os.path.exists(caminho_completo):
@@ -44,6 +64,9 @@ def processar_pastas_por_dia(base_dir):
                     data = extrair_data(file)
                     if data:
                         caminho_completo = os.path.join(root, file)
+                        timestamp_modificacao = os.path.getmtime(caminho_completo)
+                        data = ajustar_data_se_necessario(data, timestamp_modificacao)
+                        
                         tamanho = os.path.getsize(caminho_completo)
                         arquivos_por_data[data].append((file, tamanho, caminho_completo))
                     else:
@@ -88,7 +111,7 @@ def processar_pastas_por_mes(base_dir):
         for file in files:
             try:
                 print(f"Processando: {file}")
-                if file.endswith(".zip"):
+                if file.endswith((".zip", ".rar")):  # Reconhece arquivos .zip e .rar
                     if "SW" in file:
                         caminho_completo = os.path.join(root, file)
                         if os.path.exists(caminho_completo):
@@ -223,20 +246,24 @@ def excluir_arquivos_com_z_button():
     else:
         messagebox.showerror("Erro", "Selecione uma pasta válida.")
 
+# Configurando a aparência da interface com customtkinter
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("blue")
+
 # Interface gráfica
-app = tk.Tk()
-app.title("Automação de Backup")
+app = ctk.CTk()
+app.title("CleanAutomate")
 app.geometry("400x500")
 
 # Label e Entry para a pasta
-label = tk.Label(app, text="Selecione a pasta:")
+label = ctk.CTkLabel(app, text="Selecione a pasta:")
 label.pack(pady=10)
 
-pasta_entry = tk.Entry(app, width=50)
+pasta_entry = ctk.CTkEntry(app, width=300)
 pasta_entry.pack(pady=5)
 
 # Botão para selecionar a pasta
-botao_selecionar = tk.Button(app, text="Selecionar Pasta", command=selecionar_pasta)
+botao_selecionar = ctk.CTkButton(app, text="Selecionar Pasta", command=selecionar_pasta)
 botao_selecionar.pack(pady=5)
 
 # Barra de progresso
@@ -244,19 +271,19 @@ progresso = ttk.Progressbar(app, orient="horizontal", length=300, mode="determin
 progresso.pack(pady=10)
 
 # Botão para iniciar a automação por dia
-botao_iniciar_dia = tk.Button(app, text="Iniciar Automação por Dia", command=iniciar_automacao_por_dia)
+botao_iniciar_dia = ctk.CTkButton(app, text="Iniciar Automação por Dia", command=iniciar_automacao_por_dia)
 botao_iniciar_dia.pack(pady=5)
 
 # Botão para iniciar a automação por mês
-botao_iniciar_mes = tk.Button(app, text="Iniciar Automação por Mês", command=iniciar_automacao_por_mes)
+botao_iniciar_mes = ctk.CTkButton(app, text="Iniciar Automação por Mês", command=iniciar_automacao_por_mes)
 botao_iniciar_mes.pack(pady=5)
 
 # Botão para remover o prefixo "Z_"
-botao_remover_z = tk.Button(app, text="Remover Prefixo 'Z' dos Arquivos", command=remover_z_dos_arquivos)
+botao_remover_z = ctk.CTkButton(app, text="Remover Prefixo 'Z' dos Arquivos", command=remover_z_dos_arquivos)
 botao_remover_z.pack(pady=5)
 
 # Botão para excluir arquivos com "Z_"
-botao_excluir_z = tk.Button(app, text="Excluir Arquivos com 'Z'", command=excluir_arquivos_com_z_button)
+botao_excluir_z = ctk.CTkButton(app, text="Excluir Arquivos com 'Z'", command=excluir_arquivos_com_z_button)
 botao_excluir_z.pack(pady=5)
 
 # Executando a interface gráfica
