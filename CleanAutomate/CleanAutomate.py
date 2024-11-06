@@ -207,7 +207,7 @@ def excluir_arquivos_com_z(base_dir):
             arquivos_processados += 1
             progresso["value"] = arquivos_processados
             app.update_idletasks()
-
+            
 def selecionar_pasta():
     pasta_selecionada = filedialog.askdirectory()
     if pasta_selecionada:
