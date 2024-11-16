@@ -39,13 +39,13 @@ O objetivo do CleanAutomate é processar arquivos dentro de uma estrutura de dir
 Para usar o CleanAutomate, certifique-se de ter o Python e as bibliotecas necessárias instaladas. Você pode instalar as bibliotecas adicionais usando pip:
 ```bash
 pip install customtkinter
-
-## Execução
+```
+# Execução
 
 Para iniciar a aplicação, execute o script Python no terminal ou através de um ambiente de desenvolvimento que suporte execução de scripts Python com interface gráfica:
 ```bash
 python CleanAutomate.py
-
+```
 
 ## Autores
 
